@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>日志 - XQH的Blog</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+		<style>
+			.nav-container {
+				position: fixed;
+				top: 50%;
+				left: 2rem;
+				transform: translateY(-50%);
+				background: transparent;
+				z-index: 1000;
+			}
+			.nav-container ul {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 2rem;
+			}
+			.nav-container li a {
+				text-decoration: none;
+				color: #fff;
+				font-size: 1.3rem;
+				font-weight: 500;
+				transition: color 0.3s, transform 0.3s;
+				text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+				cursor: pointer;
+			}
+			.nav-container li a:hover {
+				color: #667eea;
+				transform: translateX(5px);
+			}
+			.content-container {
+				display: none;
+				position: fixed;
+				top: 50%;
+				left: calc(50% + 50px);
+				transform: translate(-50%, -50%);
+				background: rgba(255, 255, 255, 0.4);
+				padding: 2rem;
+				border-radius: 8px;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+				max-width: 1400px;
+				width: 85%;
+				max-height: 85vh;
+				overflow-y: auto;
+				z-index: 1001;
+				backdrop-filter: blur(10px);
+				color: #000;
+			}
+			/* 自定义滚动条样式 */
+			.content-container::-webkit-scrollbar {
+				width: 8px;
+			}
+			.content-container::-webkit-scrollbar-track {
+				background: rgba(0, 0, 0, 0.05);
+				border-radius: 4px;
+			}
+			.content-container::-webkit-scrollbar-thumb {
+				background: rgba(102, 126, 234, 0.5);
+				border-radius: 4px;
+			}
+			.content-container::-webkit-scrollbar-thumb:hover {
+				background: rgba(102, 126, 234, 0.7);
+			}
+			.content-container.active {
+				display: block;
+			}
+			.content-container table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-top: 1rem;
+			}
+			.content-container th,
+			.content-container td {
+				padding: 0.75rem;
+				text-align: left;
+				border-bottom: 1px solid #ddd;
+			}
+			.content-container th {
+				background: #667eea;
+				color: white;
+				font-weight: bold;
+			}
+			.content-container tbody tr:hover {
+				background: rgba(200, 200, 200, 0.5);
+			}
+			.content-container td img {
+				max-width: 100px;
+				max-height: 100px;
+				object-fit: cover;
+			}
+			.close-btn {
+				float: right;
+				cursor: pointer;
+				font-size: 1.5rem;
+				color: #666;
+				margin-bottom: 1rem;
+			}
+			.close-btn:hover {
+				color: #333;
+			}
+		</style>
+	</head>
+	<body class="is-preload">
+
+		<div class="nav-container">
+			<ul>
+				<li><a href="index.html">返回主页</a></li>
+				<li><a href="#" onclick="showContent('projects')">项目</a></li>
+				<li><a href="#" onclick="showContent('notes')">笔记</a></li>
+			</ul>
+		</div>
+
+		<div id="notes" class="content-container">
+			<span class="close-btn" onclick="hideContent()">&times;</span>
+			<h2>学习笔记</h2>
+			<div id="table-container"></div>
+		</div>
+
+		<div id="projects" class="content-container">
+			<span class="close-btn" onclick="hideContent()">&times;</span>
+			<h2>项目列表</h2>
+			<p>暂无项目...</p>
+		</div>
+
+		<div id="bg"></div>
+
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+
+		<script>
+			let workbookData = null;
+
+			// 页面加载时读取 Excel 文件
+			window.addEventListener('DOMContentLoaded', function() {
+				fetch('assets/(数据表)表格视图.xlsx')
+					.then(response => response.arrayBuffer())
+					.then(data => {
+						const workbook = XLSX.read(data, {type: 'array'});
+						const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+						const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+
+						if (jsonData.length === 0) {
+							document.getElementById('table-container').innerHTML = '<p>暂无笔记数据</p>';
+							return;
+						}
+
+						// 获取表头
+						const headers = jsonData[0];
+						const rows = jsonData.slice(1);
+
+						// 创建表格HTML
+						let tableHTML = '<table><thead><tr>';
+						headers.forEach(header => {
+							tableHTML += `<th>${header}</th>`;
+						});
+						tableHTML += '</tr></thead><tbody>';
+
+						// 添加数据行
+						rows.forEach((row, rowIndex) => {
+							if (row.length > 0) {
+								tableHTML += '<tr>';
+								headers.forEach((_, colIndex) => {
+									let cellValue = row[colIndex];
+
+									// 处理日期格式（第1列）
+									if (colIndex === 0 && cellValue) {
+										// 如果是 Excel 日期数字，转换为格式化日期
+										if (typeof cellValue === 'number') {
+											const date = new Date((cellValue - 25569) * 86400 * 1000);
+											cellValue = date.toISOString().split('T')[0];
+										}
+									}
+
+									// 检查是否是图片列（第4列，索引为3）
+									if (colIndex === 3) {
+										// 最后三行（索引23, 24, 25，对应第24, 25, 26行）
+										if (rowIndex >= 23) {
+											const imgNum = rowIndex - 22; // 1, 2, 3
+											tableHTML += `<td><img src="images/excel/WPS图片(${imgNum}).png" alt="图片" style="width: 150px; height: 150px; object-fit: cover;"></td>`;
+										} else if (typeof cellValue === 'string' && cellValue.includes('=DISPIMG')) {
+											// 其他行的图片标记
+											tableHTML += `<td>[图片]</td>`;
+										} else {
+											tableHTML += `<td>${cellValue || ''}</td>`;
+										}
+									} else {
+										tableHTML += `<td>${cellValue || ''}</td>`;
+									}
+								});
+								tableHTML += '</tr>';
+							}
+						});
+
+						tableHTML += '</tbody></table>';
+						document.getElementById('table-container').innerHTML = tableHTML;
+
+						// 为表格添加样式
+						const table = document.querySelector('#table-container table');
+						if (table) {
+							table.style.width = '100%';
+							table.style.borderCollapse = 'collapse';
+							table.style.marginTop = '1rem';
+							table.style.tableLayout = 'fixed';
+
+							const ths = table.querySelectorAll('th');
+							const tds = table.querySelectorAll('td');
+
+							ths.forEach((th, index) => {
+								th.style.padding = '0.75rem';
+								th.style.borderBottom = '1px solid #ddd';
+								th.style.background = '#667eea';
+								th.style.color = 'white';
+								th.style.fontWeight = 'bold';
+
+								// 设置列宽
+								if (index === 0) {
+									// 日期列
+									th.style.width = '150px';
+									th.style.textAlign = 'center';
+								} else if (index === 4) {
+									// 链接列
+									th.style.width = '150px';
+									th.style.textAlign = 'left';
+								} else if (index === 5) {
+									// Time列
+									th.style.width = '60px';
+									th.style.textAlign = 'left';
+								} else {
+									th.style.textAlign = 'left';
+								}
+							});
+
+							tds.forEach((td, index) => {
+								td.style.padding = '0.75rem';
+								td.style.borderBottom = '1px solid #ddd';
+								td.style.color = '#000';
+								td.style.verticalAlign = 'top';
+
+								// 计算当前单元格所在列
+								const cellIndex = index % headers.length;
+
+								// 日期列
+								if (cellIndex === 0) {
+									td.style.width = '150px';
+									td.style.textAlign = 'center';
+								} else if (cellIndex === 3) {
+									// 图片列居中
+									td.style.textAlign = 'center';
+								} else if (cellIndex === 4) {
+									// 链接列
+									td.style.width = '150px';
+									td.style.textAlign = 'left';
+									td.style.wordBreak = 'break-all';
+									td.style.maxWidth = '150px';
+									td.style.overflow = 'hidden';
+								} else if (cellIndex === 5) {
+									// Time列
+									td.style.width = '60px';
+									td.style.textAlign = 'left';
+								} else {
+									td.style.textAlign = 'left';
+								}
+							});
+						}
+					})
+					.catch(error => {
+						console.error('读取 Excel 文件失败:', error);
+						document.getElementById('table-container').innerHTML = '<p>暂无笔记数据</p>';
+					});
+			});
+
+			function showContent(type) {
+				event.preventDefault();
+				// 隐藏所有内容
+				document.querySelectorAll('.content-container').forEach(el => {
+					el.classList.remove('active');
+				});
+				// 显示选中的内容
+				document.getElementById(type).classList.add('active');
+			}
+
+			function hideContent() {
+				document.querySelectorAll('.content-container').forEach(el => {
+					el.classList.remove('active');
+				});
+			}
+		</script>
+
+	</body>
+</html>

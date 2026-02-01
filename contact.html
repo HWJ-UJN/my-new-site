@@ -6,23 +6,11 @@
 -->
 <html>
 	<head>
-		<title>我的网站</title>
+		<title>联系 - 我的网站</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-		<style>
-			.artistic-title {
-				font-size: 3.5rem;
-				font-weight: bold;
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-				text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-				letter-spacing: 2px;
-			}
-		</style>
 	</head>
 	<body class="is-preload">
 
@@ -36,8 +24,8 @@
 						</div>
 						<div class="content">
 							<div class="inner">
-								<h1 class="artistic-title">XQH的Blog</h1>
-								<p>[Learning Record]</p>
+								<h1>联系我</h1>
+								<p>期待与你交流</p>
 							</div>
 						</div>
 						<nav>
@@ -53,13 +41,31 @@
 				<!-- Main -->
 					<div id="main">
 						<article class="active">
-							<h2 class="major">简介</h2>
-							<span class="image main"><img src="images/pic01.jpg" alt="" /></span>
-							<p>你好！欢迎来到我的个人网站。这里记录了我的学习和成长历程，以及一些有趣的项目作品。</p>
-							<p>我热爱技术，喜欢探索新知识。在这个网站上，你可以了解更多关于我的信息，查看我的作品集，或者与我取得联系。</p>
-							<ul class="actions">
-								<li><a href="work.html" class="button primary">查看作品</a></li>
-								<li><a href="about.html" class="button">阅读日志</a></li>
+							<h2 class="major">联系</h2>
+							<form method="post" action="#">
+								<div class="fields">
+									<div class="field half">
+										<label for="name">姓名</label>
+										<input type="text" name="name" id="name" />
+									</div>
+									<div class="field half">
+										<label for="email">邮箱</label>
+										<input type="text" name="email" id="email" />
+									</div>
+									<div class="field">
+										<label for="message">留言</label>
+										<textarea name="message" id="message" rows="4"></textarea>
+									</div>
+								</div>
+								<ul class="actions">
+									<li><input type="submit" value="发送消息" class="primary" /></li>
+									<li><input type="reset" value="重置" /></li>
+								</ul>
+							</form>
+							<ul class="icons">
+								<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+								<li><a href="#" class="icon brands fa-weixin"><span class="label">微信</span></a></li>
+								<li><a href="#" class="icon brands fa-weibo"><span class="label">微博</span></a></li>
 							</ul>
 						</article>
 					</div>
