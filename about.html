@@ -5,7 +5,6 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
-		<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 		<style>
 			.nav-container {
 				position: fixed;
@@ -92,8 +91,8 @@
 				background: rgba(200, 200, 200, 0.5);
 			}
 			.content-container td img {
-				max-width: 100px;
-				max-height: 100px;
+				max-width: 150px;
+				max-height: 150px;
 				object-fit: cover;
 			}
 			.close-btn {
@@ -139,145 +138,125 @@
 		<script src="assets/js/main.js"></script>
 
 		<script>
-			let workbookData = null;
+			// 页面加载时读取 JSON 数据
+			window.addEventListener('DOMContentLoaded', async function() {
+				const container = document.getElementById('table-container');
 
-			// 页面加载时读取 Excel 文件
-			window.addEventListener('DOMContentLoaded', function() {
-				fetch('assets/(数据表)表格视图.xlsx')
-					.then(response => response.arrayBuffer())
-					.then(data => {
-						const workbook = XLSX.read(data, {type: 'array'});
-						const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-						const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+				try {
+					// 添加时间戳避免缓存
+					const response = await fetch('day_log_data.json?t=' + new Date().getTime());
+					if (!response.ok) {
+						throw new Error('无法加载数据');
+					}
 
-						if (jsonData.length === 0) {
-							document.getElementById('table-container').innerHTML = '<p>暂无笔记数据</p>';
-							return;
-						}
+					const data = await response.json();
+					const diaryList = data.rows || [];
+					const headers = data.headers || [];
 
-						// 获取表头
-						const headers = jsonData[0];
-						const rows = jsonData.slice(1);
+					if (diaryList.length === 0) {
+						container.innerHTML = '<p>暂无笔记数据</p>';
+						return;
+					}
 
-						// 创建表格HTML
-						let tableHTML = '<table><thead><tr>';
-						headers.forEach(header => {
-							tableHTML += `<th>${header}</th>`;
+					// 创建表格HTML
+					let tableHTML = '<table><thead><tr>';
+					headers.forEach(header => {
+						tableHTML += `<th>${header}</th>`;
+					});
+					tableHTML += '</tr></thead><tbody>';
+
+					// 添加数据行
+					diaryList.forEach((row) => {
+						tableHTML += '<tr>';
+						headers.forEach((header) => {
+							const cellValue = row[header];
+
+							// 检查是否是图片列
+							if (header && header.includes('图片') && cellValue) {
+								// 如果有图片文件名
+								if (typeof cellValue === 'string' && (cellValue.endsWith('.png') || cellValue.endsWith('.jpg') || cellValue.endsWith('.jpeg'))) {
+									tableHTML += `<td><img src="images/excel/${cellValue}" alt="图片" style="width: 150px; height: 150px; object-fit: cover;"></td>`;
+								} else {
+									tableHTML += `<td>${cellValue || ''}</td>`;
+								}
+							} else {
+								tableHTML += `<td>${cellValue || ''}</td>`;
+							}
 						});
-						tableHTML += '</tr></thead><tbody>';
+						tableHTML += '</tr>';
+					});
 
-						// 添加数据行
-						rows.forEach((row, rowIndex) => {
-							if (row.length > 0) {
-								tableHTML += '<tr>';
-								headers.forEach((_, colIndex) => {
-									let cellValue = row[colIndex];
+					tableHTML += '</tbody></table>';
+					container.innerHTML = tableHTML;
 
-									// 处理日期格式（第1列）
-									if (colIndex === 0 && cellValue) {
-										// 如果是 Excel 日期数字，转换为格式化日期
-										if (typeof cellValue === 'number') {
-											const date = new Date((cellValue - 25569) * 86400 * 1000);
-											cellValue = date.toISOString().split('T')[0];
-										}
-									}
+					// 为表格添加样式
+					const table = container.querySelector('table');
+					if (table) {
+						table.style.width = '100%';
+						table.style.borderCollapse = 'collapse';
+						table.style.marginTop = '1rem';
+						table.style.tableLayout = 'fixed';
 
-									// 检查是否是图片列（第4列，索引为3）
-									if (colIndex === 3) {
-										// 最后三行（索引23, 24, 25，对应第24, 25, 26行）
-										if (rowIndex >= 23) {
-											const imgNum = rowIndex - 22; // 1, 2, 3
-											tableHTML += `<td><img src="images/excel/WPS图片(${imgNum}).png" alt="图片" style="width: 150px; height: 150px; object-fit: cover;"></td>`;
-										} else if (typeof cellValue === 'string' && cellValue.includes('=DISPIMG')) {
-											// 其他行的图片标记
-											tableHTML += `<td>[图片]</td>`;
-										} else {
-											tableHTML += `<td>${cellValue || ''}</td>`;
-										}
-									} else {
-										tableHTML += `<td>${cellValue || ''}</td>`;
-									}
-								});
-								tableHTML += '</tr>';
+						const ths = table.querySelectorAll('th');
+						const tds = table.querySelectorAll('td');
+
+						ths.forEach((th, index) => {
+							th.style.padding = '0.75rem';
+							th.style.borderBottom = '1px solid #ddd';
+							th.style.background = '#667eea';
+							th.style.color = 'white';
+							th.style.fontWeight = 'bold';
+
+							// 设置列宽
+							if (index === 0) {
+								th.style.width = '150px';
+								th.style.textAlign = 'center';
+							} else if (index === 4) {
+								th.style.width = '150px';
+								th.style.textAlign = 'left';
+							} else if (index === 5) {
+								th.style.width = '60px';
+								th.style.textAlign = 'left';
+							} else {
+								th.style.textAlign = 'left';
 							}
 						});
 
-						tableHTML += '</tbody></table>';
-						document.getElementById('table-container').innerHTML = tableHTML;
+						tds.forEach((td, index) => {
+							td.style.padding = '0.75rem';
+							td.style.borderBottom = '1px solid #ddd';
+							td.style.color = '#000';
+							td.style.verticalAlign = 'top';
 
-						// 为表格添加样式
-						const table = document.querySelector('#table-container table');
-						if (table) {
-							table.style.width = '100%';
-							table.style.borderCollapse = 'collapse';
-							table.style.marginTop = '1rem';
-							table.style.tableLayout = 'fixed';
+							const cellIndex = index % headers.length;
 
-							const ths = table.querySelectorAll('th');
-							const tds = table.querySelectorAll('td');
+							if (cellIndex === 0) {
+								td.style.width = '150px';
+								td.style.textAlign = 'center';
+							} else if (cellIndex === 3) {
+								td.style.textAlign = 'center';
+							} else if (cellIndex === 4) {
+								td.style.width = '150px';
+								td.style.textAlign = 'left';
+								td.style.wordBreak = 'break-all';
+								td.style.maxWidth = '150px';
+								td.style.overflow = 'hidden';
+							} else if (cellIndex === 5) {
+								td.style.width = '60px';
+								td.style.textAlign = 'left';
+							} else {
+								td.style.textAlign = 'left';
+							}
+						});
+					}
 
-							ths.forEach((th, index) => {
-								th.style.padding = '0.75rem';
-								th.style.borderBottom = '1px solid #ddd';
-								th.style.background = '#667eea';
-								th.style.color = 'white';
-								th.style.fontWeight = 'bold';
+					// 自动显示笔记
+					document.getElementById('notes').classList.add('active');
 
-								// 设置列宽
-								if (index === 0) {
-									// 日期列
-									th.style.width = '150px';
-									th.style.textAlign = 'center';
-								} else if (index === 4) {
-									// 链接列
-									th.style.width = '150px';
-									th.style.textAlign = 'left';
-								} else if (index === 5) {
-									// Time列
-									th.style.width = '60px';
-									th.style.textAlign = 'left';
-								} else {
-									th.style.textAlign = 'left';
-								}
-							});
-
-							tds.forEach((td, index) => {
-								td.style.padding = '0.75rem';
-								td.style.borderBottom = '1px solid #ddd';
-								td.style.color = '#000';
-								td.style.verticalAlign = 'top';
-
-								// 计算当前单元格所在列
-								const cellIndex = index % headers.length;
-
-								// 日期列
-								if (cellIndex === 0) {
-									td.style.width = '150px';
-									td.style.textAlign = 'center';
-								} else if (cellIndex === 3) {
-									// 图片列居中
-									td.style.textAlign = 'center';
-								} else if (cellIndex === 4) {
-									// 链接列
-									td.style.width = '150px';
-									td.style.textAlign = 'left';
-									td.style.wordBreak = 'break-all';
-									td.style.maxWidth = '150px';
-									td.style.overflow = 'hidden';
-								} else if (cellIndex === 5) {
-									// Time列
-									td.style.width = '60px';
-									td.style.textAlign = 'left';
-								} else {
-									td.style.textAlign = 'left';
-								}
-							});
-						}
-					})
-					.catch(error => {
-						console.error('读取 Excel 文件失败:', error);
-						document.getElementById('table-container').innerHTML = '<p>暂无笔记数据</p>';
-					});
+				} catch (error) {
+					console.error('读取数据失败:', error);
+					container.innerHTML = '<p>加载失败，请稍后再试</p>';
+				}
 			});
 
 			function showContent(type) {

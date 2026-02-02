@@ -22,6 +22,138 @@
 				text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 				letter-spacing: 2px;
 			}
+			.introduction-link {
+				color: #667eea;
+				cursor: pointer;
+				text-decoration: underline;
+				transition: all 0.3s;
+			}
+			.introduction-link:hover {
+				color: #764ba2;
+				text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+			}
+			.modal-overlay {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.7);
+				z-index: 2000;
+				animation: fadeIn 0.3s;
+			}
+			.modal-overlay.active {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			.modal-content {
+				background: rgba(102, 126, 234, 0.15);
+				padding: 3rem;
+				border-radius: 12px;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+				max-width: 600px;
+				width: 90%;
+				position: relative;
+				animation: slideIn 0.3s;
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(102, 126, 234, 0.3);
+			}
+			@keyframes fadeIn {
+				from { opacity: 0; }
+				to { opacity: 1; }
+			}
+			@keyframes slideIn {
+				from {
+					transform: translateY(-50px);
+					opacity: 0;
+				}
+				to {
+					transform: translateY(0);
+					opacity: 1;
+				}
+			}
+			.modal-title {
+				font-size: 2rem;
+				font-weight: bold;
+				color: #fff;
+				margin-bottom: 1.5rem;
+				text-align: center;
+			}
+			.modal-info {
+				font-size: 1.1rem;
+				line-height: 2;
+				color: #fff;
+			}
+			.modal-close {
+				position: absolute;
+				top: 1rem;
+				right: 1.5rem;
+				font-size: 2rem;
+				cursor: pointer;
+				color: rgba(255, 255, 255, 0.7);
+				transition: color 0.3s;
+				line-height: 1;
+			}
+			.modal-close:hover {
+				color: #fff;
+			}
+			.diary-preview {
+				margin-top: 2rem;
+			}
+			.diary-preview h3 {
+				font-size: 1.5rem;
+				color: #667eea;
+				margin-bottom: 1rem;
+				border-bottom: 2px solid #667eea;
+				padding-bottom: 0.5rem;
+			}
+			.diary-item {
+				background: rgba(255, 255, 255, 0.1);
+				padding: 1rem;
+				margin-bottom: 1rem;
+				border-radius: 8px;
+				transition: all 0.3s;
+			}
+			.diary-item:hover {
+				background: rgba(255, 255, 255, 0.2);
+				transform: translateX(5px);
+			}
+			.diary-date {
+				font-size: 0.9rem;
+				color: #999;
+				margin-bottom: 0.5rem;
+			}
+			.diary-content {
+				font-size: 1rem;
+				line-height: 1.6;
+				color: #fff;
+				margin-bottom: 0.5rem;
+			}
+			.diary-image {
+				max-width: 100%;
+				max-height: 200px;
+				border-radius: 4px;
+				margin-top: 0.5rem;
+			}
+			.diary-tags {
+				margin-top: 0.5rem;
+			}
+			.diary-tag {
+				display: inline-block;
+				background: rgba(102, 126, 234, 0.3);
+				padding: 0.2rem 0.5rem;
+				border-radius: 4px;
+				font-size: 0.8rem;
+				margin-right: 0.5rem;
+				color: #fff;
+			}
+			.loading {
+				text-align: center;
+				color: #999;
+				padding: 1rem;
+			}
 		</style>
 	</head>
 	<body class="is-preload">
@@ -42,7 +174,7 @@
 						</div>
 						<nav>
 							<ul>
-								<li><a href="index.html">简介</a></li>
+								<li><a href="javascript:void(0)" onclick="showIntroduction(); return false;">简介</a></li>
 								<li><a href="work.html">作品</a></li>
 								<li><a href="about.html">日志</a></li>
 								<li><a href="contact.html">联系</a></li>
@@ -61,6 +193,14 @@
 								<li><a href="work.html" class="button primary">查看作品</a></li>
 								<li><a href="about.html" class="button">阅读日志</a></li>
 							</ul>
+
+							<!-- 最新日记预览 -->
+							<div class="diary-preview">
+								<h3>最新日记</h3>
+								<div id="diary-container">
+									<div class="loading">加载中...</div>
+								</div>
+							</div>
 						</article>
 					</div>
 
@@ -74,12 +214,138 @@
 		<!-- BG -->
 			<div id="bg"></div>
 
+		<!-- 个人介绍弹窗 -->
+		<div class="modal-overlay" id="introModal">
+			<div class="modal-content">
+				<span class="modal-close" onclick="closeIntroduction()">&times;</span>
+				<h2 class="modal-title">关于 XQH</h2>
+				<div class="modal-info">
+					<p><strong>🎓 教育背景</strong></p>
+					<p>济南大学 2025 级研究生</p>
+					<br>
+					<p><strong>🔬 研究方向</strong></p>
+					<p>方向不定（探索中...）</p>
+					<p>对深度学习颇有兴趣</p>
+					<br>
+					<p><strong>💻 技术栈</strong></p>
+					<p>深度学习 | Python | Web 开发</p>
+					<br>
+					<p><strong>📝 博客愿景</strong></p>
+					<p>记录学习历程，分享技术心得，留存成长足迹</p>
+				</div>
+			</div>
+		</div>
+
 		<!-- Scripts -->
 			<script src="assets/js/jquery.min.js"></script>
 			<script src="assets/js/browser.min.js"></script>
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+
+			<!-- 加载日记数据 -->
+			<script>
+				async function loadDiaryData() {
+					const container = document.getElementById('diary-container');
+
+					try {
+						// 添加时间戳避免缓存
+						const response = await fetch('day_log_data.json?t=' + new Date().getTime());
+						if (!response.ok) {
+							throw new Error('无法加载数据');
+						}
+
+						const data = await response.json();
+						const diaryList = data.rows || [];
+
+						if (diaryList.length === 0) {
+							container.innerHTML = '<p style="text-align:center;color:#999;">暂无日记记录</p>';
+							return;
+						}
+
+						// 显示最近5条日记
+						const recentDiaries = diaryList.slice(0, 5);
+
+						let html = '';
+						recentDiaries.forEach((diary, index) => {
+							// 查找日期字段
+							const dateKey = Object.keys(diary).find(key => key.includes('日期') || key.toLowerCase().includes('date'));
+							const textKey = Object.keys(diary).find(key => key.includes('文本') || key.toLowerCase().includes('text'));
+							const thoughtKey = Object.keys(diary).find(key => key.includes('感悟') || key.includes('想法'));
+							const imageKey = Object.keys(diary).find(key => key.includes('图片') || key.toLowerCase().includes('image'));
+
+							const date = dateKey ? diary[dateKey] : '';
+							const text = textKey ? diary[textKey] : '';
+							const thought = thoughtKey ? diary[thoughtKey] : '';
+							const image = imageKey ? diary[imageKey] : '';
+
+							html += '<div class="diary-item">';
+							html += `<div class="diary-date">${date}</div>`;
+
+							if (text) {
+								// 截取前100个字符
+								const shortText = text.length > 100 ? text.substring(0, 100) + '...' : text;
+								html += `<div class="diary-content">${shortText}</div>`;
+							}
+
+							if (image) {
+								html += `<img src="images/excel/${image}" alt="日记图片" class="diary-image">`;
+							}
+
+							if (thought) {
+								html += `<div class="diary-tags"><span class="diary-tag">💭 ${thought.substring(0, 20)}${thought.length > 20 ? '...' : ''}</span></div>`;
+							}
+
+							html += '</div>';
+						});
+
+						container.innerHTML = html;
+
+					} catch (error) {
+						console.error('加载日记数据失败:', error);
+						container.innerHTML = '<p style="text-align:center;color:#999;">加载失败，请稍后再试</p>';
+					}
+				}
+
+				// 页面加载时执行
+				window.addEventListener('DOMContentLoaded', loadDiaryData);
+			</script>
+
+		<script>
+			// 显示个人介绍
+			function showIntroduction() {
+				console.log('函数被调用了！');
+				const modal = document.getElementById('introModal');
+				console.log('找到模态框:', modal);
+				if (modal) {
+					modal.classList.add('active');
+					document.body.style.overflow = 'hidden';
+					console.log('已添加active类');
+				} else {
+					alert('找不到introModal元素');
+				}
+			}
+
+			// 关闭个人介绍
+			function closeIntroduction(event) {
+				event.stopPropagation();
+				const modal = document.getElementById('introModal');
+				if (modal) {
+					modal.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+			}
+
+			// ESC 键关闭弹窗
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape') {
+					closeIntroduction();
+				}
+			});
+
+			// 测试函数是否加载
+			console.log('showIntroduction 函数已定义:', typeof showIntroduction);
+		</script>
 
 	</body>
 </html>
